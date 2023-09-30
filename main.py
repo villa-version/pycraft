@@ -1,16 +1,38 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import pygame
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+class Display:
+    def __init__(self, ss):
+        self.width, self.height = ss
+        self.screen = pygame.display.set_mode((self.width, self.height))
 
 
-# Press the green button in the gutter to run the script.
+class App:
+
+    def __init__(self, screen_size):
+        self.display = Display(screen_size)
+
+    def update(self):
+        pass
+
+    def draw(self):
+        pass
+
+
+def main():
+
+    app = App((1000, 650))
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+        app.display.screen.fill((255, 255, 255))
+        app.update()
+        pygame.display.update()
+
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    main()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
