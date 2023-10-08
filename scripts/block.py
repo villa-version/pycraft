@@ -1,82 +1,91 @@
 import pygame
-from values import *
+from settings import settings
+from controller import controller
+from timer import timer
 
 
 class Block:
 
     detected = False
-    mob = None
 
-    def __init__(self, x, y, w, h, skin, speed, strength, name, screen):
+    def __init__(self, x, y, w, h, speed, skin, name, strength, screen, player, con_friction):
         self.x = x
         self.y = y
         self.w = w
         self.h = h
         self.skin = pygame.transform.scale(skin, (self.w, self.h))
         self.speed = speed
-        self.strength = strength
-        self.given_strength = strength
         self.name = name
+        self.strength = strength
+        self.given_strength = self.strength
         self.screen = screen
+        self.player = player
+        self.constant_friction = con_friction
 
     def update(self):
+        self.rub()
         self.draw()
         self.detect()
-        self.breaking()
-        self.remove()
+        self.break_process()
         self.collision()
+
+    def break_process(self):
+        if controller.button_down and self.detected:
+            self.breaking()
+        else:
+            self.restoration()
+
+    def rub(self):
+        if self.player.speed.x > 0:
+            self.player.speed.x -= self.constant_friction
+        else:
+            self.player.speed.x += self.constant_friction
 
     def draw(self):
         self.screen.blit(self.skin, (self.x, self.y))
 
     def detect(self):
-        mx, my = pygame.mouse.get_pos()
-        if self.x < mx < self.x + self.w and self.y < my < self.y + self.h:
+        if self.x < controller.mouse.x < self.x + self.w and self.y < controller.mouse.y < self.y + self.h:
             self.detected = True
         else:
             self.detected = False
 
     def breaking(self):
-        if button_down and self.detected:
-            self.strength -= 0.5
-        else:
-            self.strength = self.given_strength
+        self.given_strength -= 0.0005
 
-    def remove(self):
-        if self.strength == 0:
-            return True
-
-    def get_mob(self, mob):
-        self.mob = mob
+    def restoration(self):
+        self.given_strength = self.strength
 
     def check_stay_in_place_y(self):
-        if self.y <= self.mob.y <= self.y + self.h:
-            return True
-        elif self.y <= self.mob.y + self.mob.h <= self.y + self.h:
+        if self.player.y < self.y < self.player.y + self.player.h:
             return True
 
     def check_stay_in_place_x(self):
-        if self.x <= self.mob.x <= self.x + self.w:
+        if self.x < self.player.x <= self.x + self.w:
             return True
-        elif self.x <= self.mob.x + self.mob.w <= self.x + self.w:
+        elif self.x < self.player.x + self.player.w <= self.x + self.w:
             return True
 
     def collision(self):
-        global cont_time
-        dx, dy = self.x - self.mob.x, self.y - self.mob.y
-        d_up_side = abs(self.mob.speed[1]) >= self.y - self.mob.y - self.mob.h
-        d_down_side = abs(self.mob.speed[1]) >= self.mob.y - self.y - self.h
+        d_up_side = self.y + abs(self.player.speed.y) + 1 > self.player.y + self.player.h + abs(self.player.speed.y) >= self.y
+        d_right_side = self.x + self.w + abs(self.player.speed.x) - 1 < self.player.x - abs(self.player.speed.x) <= self.x + self.w
+        d_left_side = self.x + abs(self.player.speed.x) + 1 > self.player.x + self.player.w + abs(self.player.speed.x) >= self.x
+        d_down_side = self.y + self.h - abs(self.player.speed.y) - 1 < self.player.y - abs(self.player.speed.y) <= self.y + self.h
 
         if self.check_stay_in_place_x():
-            if d_up_side:
-                self.mob.speed[1], cont_time = 0, 0
-                self.mob.is_land = True
-                self.mob.y = self.y - self.mob.h - 1
-            else:
-                self.mob.is_land = False
-            if d_down_side:
-                self.mob.speed[1], cont_time = 0, 0
-                self.mob.y = self.y + self.h + 1
-            else:
-                self.mob.is_land = False
+            if d_up_side and self.player.speed.y < 0:
+                timer.update_start_time()
+                self.player.speed.y = 0
+                self.player.y = self.y - self.player.h
+            elif d_down_side and self.player.speed.y > 0:
+                timer.update_start_time()
+                self.player.speed.y = 0
+                self.player.y = self.y + self.h
+        if self.check_stay_in_place_y():
+            if d_right_side and self.player.speed.x < 0:
+                self.player.speed.x = 0
+                self.player.x = self.x + self.w
+            elif d_left_side and self.player.speed.x > 0:
+                self.player.speed.x = 0
+                self.player.x = self.x - self.player.w
 

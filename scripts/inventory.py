@@ -1,4 +1,4 @@
-from values import *
+from settings import *
 
 
 class Inventory:
