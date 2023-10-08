@@ -13,8 +13,8 @@ BLOCK_SIZE = settings.BLOCK_SIZE
 
 class World:
 
-    blocks = matrix((settings.MAX_BLOCKS_X, settings.MAX_BLOCKS_Y))
-    print(blocks)
+    blocks = []
+    matrix_blocks = matrix((settings.MAX_BLOCKS_X, settings.MAX_BLOCKS_Y), dtype=object)
 
     def __init__(self, display, player):
         self.display = display
